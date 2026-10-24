@@ -1,0 +1,27 @@
+<%
+  const path = locals.currentPath || "";
+  const user = locals.currentUser;
+  const active = (prefix) => (prefix === "/" ? path === "/" : path.startsWith(prefix)) ? "active" : "";
+%>
+<header class="header">
+  <a href="/" class="brand">Gatherly <span>Smart Event Management &amp; Ticketing</span></a>
+  <nav aria-label="Main">
+    <a href="/" class="<%= active("/") %>">Events</a>
+    <% if (user) { %>
+      <a href="/dashboard" class="<%= active("/dashboard") %>"><%= user.role === "admin" ? "Dashboard" : "My bookings" %></a>
+    <% } %>
+    <a href="/contact" class="<%= active("/contact") %>">Contact</a>
+    <% if (user && user.role === "admin") { %>
+      <a href="/admin/events" class="<%= active("/admin") %>">Manage events</a>
+    <% } %>
+    <% if (user) { %>
+      <form action="/logout" method="POST" class="nav-form" data-confirm="Are you sure you want to log out?">
+        <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+        <button type="submit" class="nav-button">Log out (<%= user.name %>)</button>
+      </form>
+    <% } else { %>
+      <a href="/login" class="<%= active("/login") %>">Log in</a>
+      <a href="/register" class="<%= active("/register") %>">Register</a>
+    <% } %>
+  </nav>
+</header>

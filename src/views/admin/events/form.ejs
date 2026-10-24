@@ -1,0 +1,70 @@
+<%- include("../../partials/head") %>
+
+<p class="breadcrumb"><a href="/admin/events">← Manage events</a></p>
+
+<section class="card form-card">
+  <h2><%= isEdit ? "Edit event" : "Create event" %></h2>
+
+  <%- include("../../partials/errors") %>
+
+  <form action="<%= isEdit ? `/admin/events/${event._id}` : "/admin/events" %>" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" value="<%= event.title || "" %>" maxlength="120" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="5" maxlength="2000" required><%= event.description || "" %></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <% categories.forEach((category) => { %>
+            <option value="<%= category %>" <%= event.category === category ? "selected" : "" %>><%= category %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" value="<%= event.location || "" %>" maxlength="160" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="startDate">Starts</label>
+        <input type="datetime-local" id="startDate" name="startDate" value="<%= fmt.inputDateTime(event.startDate) %>" required>
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">Ends</label>
+        <input type="datetime-local" id="endDate" name="endDate" value="<%= fmt.inputDateTime(event.endDate) %>" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="totalCapacity">Total capacity</label>
+        <input type="number" id="totalCapacity" name="totalCapacity" value="<%= Number.isFinite(event.totalCapacity) ? event.totalCapacity : "" %>" min="1" step="1" required>
+      </div>
+
+      <div class="form-group">
+        <label for="price">Ticket price (R)</label>
+        <input type="number" id="price" name="price" value="<%= Number.isFinite(event.price) ? event.price : "" %>" min="0" step="0.01" required>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn primary-btn"><%= isEdit ? "Save changes" : "Create event" %></button>
+      <a href="/admin/events" class="btn secondary-btn">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<%- include("../../partials/foot") %>
