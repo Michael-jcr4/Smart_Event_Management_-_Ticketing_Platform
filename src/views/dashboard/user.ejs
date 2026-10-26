@@ -1,0 +1,61 @@
+<%- include("../partials/head") %>
+
+<section class="page-heading">
+  <h2>My bookings</h2>
+  <p>Hi <%= currentUser.name %>, here are all your ticket bookings.</p>
+</section>
+
+<section class="card">
+  <% if (bookings.length === 0) { %>
+    <div class="empty-state">
+      <p>You haven't booked any tickets yet.</p>
+      <a href="/" class="btn primary-btn">Browse events</a>
+    </div>
+  <% } else { %>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Date</th>
+            <th>Tickets</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Booked on</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% bookings.forEach((booking) => { %>
+            <% const event = booking.event; %>
+            <tr>
+              <td>
+                <% if (event) { %>
+                  <a href="/events/<%= event._id %>"><%= event.title %></a><br>
+                  <span class="muted small"><%= event.location %></span>
+                <% } else { %>
+                  <span class="muted">Event removed</span>
+                <% } %>
+              </td>
+              <td><%= event ? fmt.dateRange(event.startDate, event.endDate) : "—" %></td>
+              <td><%= booking.quantity %></td>
+              <td><%= fmt.money(booking.totalPrice) %></td>
+              <td><span class="status <%= booking.status %>"><%= booking.status %></span></td>
+              <td><%= fmt.date(booking.createdAt) %></td>
+              <td>
+                <% if (booking.status === "confirmed" && event && event.startDate > now) { %>
+                  <form action="/bookings/<%= booking._id %>/cancel" method="POST" data-confirm="Cancel this booking? Your tickets will be released.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn danger-btn small-btn">Cancel</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<%- include("../partials/foot") %>

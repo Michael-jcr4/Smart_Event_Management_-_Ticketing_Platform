@@ -1,0 +1,52 @@
+<%- include("../../partials/head") %>
+
+<section class="page-heading">
+  <h2>Manage events</h2>
+  <p>Create, edit and remove events. Events with confirmed bookings can't be deleted.</p>
+</section>
+
+<section class="card">
+  <div class="card-header">
+    <h3><%= events.length %> event<%= events.length === 1 ? "" : "s" %></h3>
+    <a href="/admin/events/new" class="btn primary-btn small-btn">+ Create event</a>
+  </div>
+
+  <% if (events.length === 0) { %>
+    <p class="muted">No events yet. Create the first one.</p>
+  <% } else { %>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Booked</th>
+            <th>Price</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% events.forEach((event) => { %>
+            <tr>
+              <td><a href="/events/<%= event._id %>"><%= event.title %></a><br><span class="muted small"><%= event.location %></span></td>
+              <td><%= event.category %></td>
+              <td><%= fmt.dateRange(event.startDate, event.endDate) %></td>
+              <td><%= event.bookedCount %> / <%= event.totalCapacity %></td>
+              <td><%= fmt.money(event.price) %></td>
+              <td class="actions">
+                <a href="/admin/events/<%= event._id %>/edit" class="btn secondary-btn small-btn">Edit</a>
+                <form action="/admin/events/<%= event._id %>/delete" method="POST" data-confirm="Delete this event?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn danger-btn small-btn">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<%- include("../../partials/foot") %>

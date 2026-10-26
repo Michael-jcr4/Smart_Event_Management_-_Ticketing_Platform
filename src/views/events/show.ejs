@@ -1,0 +1,53 @@
+<%- include("../partials/head") %>
+
+<% const available = event.availableTickets; %>
+
+<p class="breadcrumb"><a href="/">← All events</a></p>
+
+<section class="event-detail">
+  <article class="card">
+    <span class="event-badge inline <%= event.category.toLowerCase() %>"><%= event.category %></span>
+    <h2><%= event.title %></h2>
+    <ul class="event-meta">
+      <li><strong>When:</strong> <%= fmt.dateRange(event.startDate, event.endDate) %></li>
+      <li><strong>Where:</strong> <%= event.location %></li>
+      <li><strong>Price:</strong> <%= event.price > 0 ? fmt.money(event.price) + " per ticket" : "Free" %></li>
+    </ul>
+    <p class="event-full-description"><%= event.description %></p>
+  </article>
+
+  <aside class="card booking-panel">
+    <h3>Tickets</h3>
+
+    <div class="capacity">
+      <div class="capacity-bar" role="progressbar" aria-valuemin="0" aria-valuemax="<%= event.totalCapacity %>" aria-valuenow="<%= event.bookedCount %>">
+        <span style="width: <%= Math.min(100, Math.round((event.bookedCount / event.totalCapacity) * 100)) %>%"></span>
+      </div>
+      <p><%= available %> of <%= event.totalCapacity %> tickets left</p>
+    </div>
+
+    <% if (hasStarted) { %>
+      <p class="muted">Bookings are closed for this event.</p>
+    <% } else if (available === 0) { %>
+      <p class="ticket-status sold-out">Sold out</p>
+    <% } else if (!locals.currentUser) { %>
+      <a href="/login?next=/events/<%= event._id %>" class="btn primary-btn block">Log in to book</a>
+      <p class="muted small">No account? <a href="/register">Register</a></p>
+    <% } else { %>
+      <form action="/events/<%= event._id %>/book" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-group">
+          <label for="quantity">Number of tickets</label>
+          <select id="quantity" name="quantity">
+            <% for (let i = 1; i <= maxPerBooking; i++) { %>
+              <option value="<%= i %>"><%= i %> × <%= fmt.money(event.price) %> = <%= fmt.money(event.price * i) %></option>
+            <% } %>
+          </select>
+        </div>
+        <button type="submit" class="btn primary-btn block">Book now</button>
+      </form>
+    <% } %>
+  </aside>
+</section>
+
+<%- include("../partials/foot") %>

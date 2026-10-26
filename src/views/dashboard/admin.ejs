@@ -1,0 +1,69 @@
+<%- include("../partials/head") %>
+
+<section class="page-heading">
+  <h2>Admin dashboard</h2>
+  <p>An overview of events, ticket sales and enquiries.</p>
+</section>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <p class="stat-label">Upcoming events</p>
+    <p class="stat-value"><%= stats.upcomingCount %></p>
+    <p class="muted small"><%= stats.eventCount %> in total</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Tickets sold</p>
+    <p class="stat-value"><%= stats.tickets %></p>
+    <p class="muted small">across <%= stats.bookings %> bookings</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Revenue</p>
+    <p class="stat-value"><%= fmt.money(stats.revenue) %></p>
+    <p class="muted small">confirmed bookings</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Open enquiries</p>
+    <p class="stat-value"><%= stats.openEnquiries %></p>
+    <p class="muted small"><a href="/contact#enquiries">View inbox</a></p>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-header">
+    <h3>Recent bookings</h3>
+    <a href="/admin/events" class="btn secondary-btn small-btn">Manage events</a>
+  </div>
+
+  <% if (recentBookings.length === 0) { %>
+    <p class="muted">No bookings yet.</p>
+  <% } else { %>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Event</th>
+            <th>Tickets</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Booked on</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentBookings.forEach((booking) => { %>
+            <tr>
+              <td><%= booking.user ? booking.user.name : "Deleted user" %><br><span class="muted small"><%= booking.user ? booking.user.email : "" %></span></td>
+              <td><%= booking.event ? booking.event.title : "Event removed" %></td>
+              <td><%= booking.quantity %></td>
+              <td><%= fmt.money(booking.totalPrice) %></td>
+              <td><span class="status <%= booking.status %>"><%= booking.status %></span></td>
+              <td><%= fmt.dateTime(booking.createdAt) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<%- include("../partials/foot") %>

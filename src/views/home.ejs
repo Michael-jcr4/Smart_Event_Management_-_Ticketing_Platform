@@ -1,0 +1,76 @@
+<%- include("partials/head") %>
+
+<section class="page-heading">
+  <h2>Upcoming events</h2>
+  <p>Browse conferences, workshops and festivals, and book your tickets.</p>
+</section>
+
+<section class="card filter-section">
+  <form action="/" method="GET" class="filter-form">
+    <input type="search" name="search" placeholder="Search events or venues…" value="<%= filters.search %>" aria-label="Search">
+
+    <select name="category" aria-label="Category">
+      <option value="">All categories</option>
+      <% categories.forEach((category) => { %>
+        <option value="<%= category %>" <%= filters.category === category ? "selected" : "" %>><%= category %></option>
+      <% }) %>
+    </select>
+
+    <input type="date" name="date" value="<%= filters.date %>" aria-label="Date">
+
+    <select name="availability" aria-label="Availability">
+      <option value="">All events</option>
+      <option value="available" <%= filters.availability === "available" ? "selected" : "" %>>Tickets available</option>
+    </select>
+
+    <button type="submit" class="btn primary-btn">Search</button>
+    <a href="/" class="btn secondary-btn">Clear</a>
+  </form>
+</section>
+
+<section>
+  <% if (events.length === 0) { %>
+    <div class="empty-state">
+      <p>No events match your search.</p>
+      <a href="/">View all events</a>
+    </div>
+  <% } else { %>
+    <p class="results-count"><%= events.length %> event<%= events.length === 1 ? "" : "s" %> found</p>
+
+    <div class="events-grid">
+      <% events.forEach((event) => { %>
+        <% const available = Math.max(event.totalCapacity - event.bookedCount, 0); %>
+        <article class="event-card">
+          <div class="event-badge <%= event.category.toLowerCase() %>"><%= event.category %></div>
+
+          <div class="event-body">
+            <h3 class="event-title"><a href="/events/<%= event._id %>"><%= event.title %></a></h3>
+            <p class="event-description"><%= event.description %></p>
+
+            <ul class="event-meta">
+              <li><%= fmt.dateRange(event.startDate, event.endDate) %></li>
+              <li><%= event.location %></li>
+              <li><%= event.price > 0 ? fmt.money(event.price) : "Free" %></li>
+            </ul>
+
+            <% if (available === 0) { %>
+              <span class="ticket-status sold-out">Sold out</span>
+            <% } else if (available <= 10) { %>
+              <span class="ticket-status low-stock">Only <%= available %> left</span>
+            <% } else { %>
+              <span class="ticket-status in-stock"><%= available %> tickets available</span>
+            <% } %>
+          </div>
+
+          <div class="event-footer">
+            <a href="/events/<%= event._id %>" class="btn primary-btn block">
+              <%= available > 0 ? "View & book" : "View details" %>
+            </a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include("partials/foot") %>
