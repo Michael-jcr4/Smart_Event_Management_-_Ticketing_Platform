@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const os = require("os");
 
 const mongoose = require("mongoose");
 
@@ -17,6 +18,11 @@ async function connect() {
   await mongoose.connect(uri, {
     dbName: `test_${crypto.randomBytes(6).toString("hex")}`,
     serverSelectionTimeoutMS: 10000,
+    // The MongoDB driver loads Node's `os` module with a dynamic import(),
+    // which Jest's sandbox doesn't support. The failure is swallowed and the
+    // driver then sends an empty handshake, which MongoDB rejects with
+    // "Missing required sub-document 'driver'". Passing `os` in directly avoids it.
+    runtimeAdapters: { os },
   });
   await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
 }
