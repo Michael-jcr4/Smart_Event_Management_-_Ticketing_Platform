@@ -1,5 +1,6 @@
+const crypto = require("crypto");
+
 const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
 
 // Register every model so their indexes (e.g. unique email) get built.
 require("../../src/models/Booking");
@@ -7,11 +8,16 @@ require("../../src/models/Enquiry");
 require("../../src/models/Event");
 require("../../src/models/User");
 
-let server;
-
+// The server is started once in tests/globalSetup.js. Each test file gets its
+// own randomly named database on it, which is dropped when the file finishes.
 async function connect() {
-  server = await MongoMemoryServer.create();
-  await mongoose.connect(server.getUri());
+  const uri = process.env.TEST_MONGO_URI;
+  if (!uri) throw new Error("TEST_MONGO_URI is not set; tests/globalSetup.js should have started MongoDB.");
+
+  await mongoose.connect(uri, {
+    dbName: `test_${crypto.randomBytes(6).toString("hex")}`,
+    serverSelectionTimeoutMS: 10000,
+  });
   await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
 }
 
@@ -20,8 +26,10 @@ async function clear() {
 }
 
 async function close() {
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.dropDatabase();
+  }
   await mongoose.disconnect();
-  if (server) await server.stop();
 }
 
 module.exports = { connect, clear, close };
