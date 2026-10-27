@@ -4,6 +4,7 @@ const { setFlash } = require("../middleware/locals");
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
+const SIGNUP_ROLES = ["uesr", "organiser"];
 
 // New session ID on every login/registration, to prevent session fixation.
 function regenerateSession(req) {
@@ -22,6 +23,8 @@ async function register(req, res) {
   const password = String(req.body.password || "");
   const confirmPassword = String(req.body.confirmPassword || "");
 
+  const role = SIGNUP_ROLES.includes(req.body.accountType) ? req.body.accountType : "user";
+
   const errors = [];
   if (name.length < 2) errors.push("Name must be at least 2 characters long.");
   if (!EMAIL_PATTERN.test(email)) errors.push("Please enter a valid email address.");
@@ -29,15 +32,15 @@ async function register(req, res) {
   if (password !== confirmPassword) errors.push("Passwords do not match.");
 
   const renderErrors = (messages) =>
-    res.status(400).render("auth/register", { title: "Register", errors: messages, values: { name, email } });
+    res.status(400).render("auth/register", { title: "Register", errors: messages, values: { name, email, accountType: role } });
 
   if (errors.length > 0) return renderErrors(errors);
 
   let user;
   try {
-    // The role is never read from the form: everyone who signs up is a regular
+    // The role comes from the allow-list above, never straight from the form.
     // user. Admin accounts are created with `npm run seed`.
-    user = await User.create({ name, email, password: await User.hashPassword(password) });
+    user = await User.create({ name, email, role, password: await User.hashPassword(password)  });
   } catch (err) {
     if (err.code === 11000) return renderErrors(["An account with that email already exists."]);
     if (err.name === "ValidationError") return renderErrors(Object.values(err.errors).map((e) => e.message));

@@ -48,6 +48,20 @@ describe("registration", () => {
     expect((await agent.get("/admin/events")).status).toBe(403);
   });
 
+  test("lets people sign up as an organiser", async () => {
+    await postForm(request.agent(app), "/register", {...validRegistration, accountType: "organiser"});
+
+    const user = await User.findOne({email: "thandi@example.com"});
+    expect(user.role).toBe("organiser")
+  });
+
+  test("never lets people sign up as an admin", async () => {
+    await postForm(request.agent(app), "/register", {...validRegistration, accountType: "admin"});
+
+    const user = await User.findOne({email: "thandi@example.com"});
+    expect(user.role).toBe("user");
+  })
+
   test("rejects a duplicate email", async () => {
     await createUser({ email: "thandi@example.com" });
     const res = await postForm(request.agent(app), "/register", validRegistration);

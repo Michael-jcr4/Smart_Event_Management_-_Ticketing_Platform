@@ -35,6 +35,18 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <span class="label">Account Type</span>
+      <label class="radio-option">
+        <input type="radio" name="accountType" value="user" <%= values.accountType !== "organiser" ? "chacked" : "" %>>
+        I want to book events
+      </label>
+      <label class="radio-option">
+        <input type="radio" name="accountType" value="organiser" <%= values.accountType !== "user" ? "checked" : "" %>>
+        I want to host events
+      </label>
+    </div>
+
     <button type="submit" class="btn primary-btn block">Register</button>
   </form>
 
