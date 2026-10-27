@@ -41,6 +41,11 @@ function readEventForm(body) {
   return { data, errors };
 }
 
+function ownedEvents(req) {
+  const user = req.session.user;
+  return user.role === "admin" ? {} : {createdBy: user._id};
+}
+
 function renderForm(res, { status = 200, event, errors = [], isEdit = false }) {
   res.status(status).render("admin/events/form", {
     title: isEdit ? "Edit event" : "Create event",
@@ -52,7 +57,7 @@ function renderForm(res, { status = 200, event, errors = [], isEdit = false }) {
 }
 
 async function list(req, res) {
-  const events = await Event.find().sort({ startDate: 1 }).lean();
+  const events = await Event.find(ownedEvents(req)).sort({ startDate: 1 }).lean();
   res.render("admin/events/index", { title: "Manage events", events });
 }
 
@@ -76,7 +81,7 @@ async function create(req, res) {
 }
 
 async function editForm(req, res) {
-  const event = await Event.findById(req.params.id).lean();
+  const event = await Event.findOne({ _id: req.params.id, ...ownedEvents(req) }).lean();
   if (!event) throw new HttpError(404, "Event not found.");
   renderForm(res, { event, isEdit: true });
 }
@@ -91,7 +96,7 @@ async function update(req, res) {
     // The bookedCount condition makes "capacity can't drop below tickets
     // already sold" part of the same atomic write as the update itself.
     updated = await Event.findOneAndUpdate(
-      { _id: req.params.id, bookedCount: { $lte: data.totalCapacity } },
+      { _id: req.params.id, ...ownedEvents, bookedCount: { $lte: data.totalCapacity } },
       data,
       { returnDocument: "after", runValidators: true }
     );
@@ -101,7 +106,7 @@ async function update(req, res) {
   }
 
   if (!updated) {
-    const existing = await Event.findById(req.params.id).lean();
+    const existing = await Event.findOne({_id: req.params.id, ...ownedEvents(req)}).lean();
     if (!existing) throw new HttpError(404, "Event not found.");
     return renderForm(res, {
       status: 409,
@@ -116,7 +121,7 @@ async function update(req, res) {
 }
 
 async function remove(req, res) {
-  const event = await Event.findById(req.params.id);
+  const event = await Event.findOne({ _id: req.params.id, ...ownedEvents(req) });
   if (!event) throw new HttpError(404, "Event not found.");
 
   if (await Booking.exists({ event: event._id, status: "confirmed" })) {

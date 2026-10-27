@@ -6,7 +6,7 @@ const bookings = require("../controllers/bookingController");
 const dashboard = require("../controllers/dashboardController");
 const enquiries = require("../controllers/enquiryController");
 const events = require("../controllers/eventController");
-const { requireAuth, requireAdmin } = require("../middleware/auth");
+const { requireAuth, requireRole, requireAdmin } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimit");
 
 const router = express.Router();
@@ -38,9 +38,9 @@ router.post("/contact", enquiries.submit);
 router.post("/contact/:id/status", requireAdmin, enquiries.updateStatus);
 router.post("/contact/:id/delete", requireAdmin, enquiries.remove);
 
-// Event management (admins)
+// Event management (admins see every event, organisers only see theirs)
 const admin = express.Router();
-admin.use(requireAdmin);
+admin.use(requireRole("admin", "organiser"));
 admin.get("/events", adminEvents.list);
 admin.get("/events/new", adminEvents.newForm);
 admin.post("/events", adminEvents.create);

@@ -6,11 +6,15 @@ function requireAuth(req, res, next) {
   return res.redirect(`/login${nextUrl}`);
 }
 
-function requireAdmin(req, res, next) {
-  if (!req.session.user) return requireAuth(req, res, next);
-  if (req.session.user.role === "admin") return next();
-  return next(new HttpError(403, "Access denied. Admins only."));
+function requireRole(...roles){
+  return(req, res, next) => {
+    if(!req.session.user) return requireAuth(req, res, next);
+    if(roles.includes(req.session.user.role)) return next();
+    return next(new HttpError(403, "You do not have permission to do that"));
+  };
 }
+
+const requireAdmin = requireRole("admin");
 
 // Only allow redirects to paths on this site (blocks "//evil.com" style open redirects).
 function safeRedirectPath(target, fallback = "/dashboard") {
@@ -19,4 +23,4 @@ function safeRedirectPath(target, fallback = "/dashboard") {
   return target;
 }
 
-module.exports = { requireAuth, requireAdmin, safeRedirectPath };
+module.exports = { requireAuth, requireRole, requireAdmin, safeRedirectPath };

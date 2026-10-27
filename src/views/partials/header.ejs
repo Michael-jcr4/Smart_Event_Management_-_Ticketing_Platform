@@ -11,7 +11,7 @@
       <a href="/dashboard" class="<%= active("/dashboard") %>"><%= user.role === "admin" ? "Dashboard" : "My bookings" %></a>
     <% } %>
     <a href="/contact" class="<%= active("/contact") %>">Contact</a>
-    <% if (user && user.role === "admin") { %>
+    <% if (user && (user.role === "admin" || user.role === "organiser")) { %>
       <a href="/admin/events" class="<%= active("/admin") %>">Manage events</a>
     <% } %>
     <% if (user) { %>
