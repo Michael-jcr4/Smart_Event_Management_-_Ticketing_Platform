@@ -96,7 +96,7 @@ async function update(req, res) {
     // The bookedCount condition makes "capacity can't drop below tickets
     // already sold" part of the same atomic write as the update itself.
     updated = await Event.findOneAndUpdate(
-      { _id: req.params.id, ...ownedEvents, bookedCount: { $lte: data.totalCapacity } },
+      { _id: req.params.id, ...ownedEvents(req), bookedCount: { $lte: data.totalCapacity } },
       data,
       { returnDocument: "after", runValidators: true }
     );

@@ -108,8 +108,7 @@ describe("booking through the website", () => {
   });
 });
 
-describe("admin event management", () => {
-  const eventForm = {
+const eventForm = {
     title: "Admin Created Event",
     description: "Created through the admin form.",
     category: "Workshop",
@@ -119,6 +118,8 @@ describe("admin event management", () => {
     totalCapacity: "40",
     price: "99.50",
   };
+
+describe("admin event management", () => {
 
   test("regular users can't access admin pages or actions", async () => {
     const agent = await loginAs(app, await createUser());
@@ -172,6 +173,64 @@ describe("admin event management", () => {
     await Booking.updateMany({}, { status: "cancelled" });
     await postForm(agent, `/admin/events/${event._id}/delete`);
     expect(await Event.exists({ _id: event._id })).toBeFalsy();
+  });
+});
+
+describe("organisers", () => {
+  test("can create an event, which is saved as theirs", async () => {
+    const organiser = await createUser({role: "organiser"});
+    const agent = await loginAs(app, organiser);
+
+    const res = await postForm(agent, "/admin/events", eventForm);
+
+    expect(res.status).toBe(302);
+    const event = await Event.findOne({ title: "Admin Created Event"});
+    expect(event.createdBy.toString()).toBe(organiser._id.toString());
+  });
+
+  test("only see their own events on manage events screen", async () => {
+    const organiser1 = await createUser({role: "organiser"});
+    const organiser2 = await createUser({role: "organiser"});
+    await createEvent({title: "Organiser 1's Event", createdBy: organiser1._id});
+    await createEvent({title: "organiser 2's Event", createdBy: organiser2._id});
+    const agent = await loginAs(app, organiser1);
+
+    const res = await agent.get("/admin/events");
+
+    expect(res.status).toBe(200);
+    expect(text(res)).toContain("Organiser 1's Event");
+    expect(text(res)).not.toContain("organiser 2's Event");
+  })
+
+  test("cant view, edit or delete another organisers event", async () => {
+    const owner = await createUser({role: "organiser"});
+    const intruder =  await createUser({role: "organiser"});
+    const event = await createEvent({title: "Owner's event", createdBy: owner._id});
+    const agent = await loginAs(app, intruder);
+
+    const editPage = await agent.get(`/admin/event/${event._id}/edit`);
+    const update = await postForm(agent, `/admin/events/${event._id}`, {...eventForm, title:"Hacked"});
+    const remove = await postForm(agent, `/admin/events/${event._id}/delete`);
+
+    expect(editPage.status).toBe(404);
+    expect(update.status).toBe(404);
+    expect(remove.status).toBe(404);
+    
+    const unchanged = await Event.findById(event._id);
+    expect(unchanged.title).toBe("Owner's event")
+  });
+
+  test("admins can still edit an organiser's event", async () => {
+    const admin = await createUser({role: "admin"});
+    const organiser = await createUser({role: "organiser"});
+    const event = await createEvent({title: "Organiser's Event", createdBy: organiser._id});
+    const agent = await loginAs(app, admin);
+
+    const res = await postForm(agent, `/admin/events/${event._id}`, {...eventForm, title: "Edited By Admin"});
+
+    expect(res.status).toBe(302);
+    const updated = await Event.findById(event._id);
+    expect(updated.title).toBe("Edited By Admin");
   });
 });
 
