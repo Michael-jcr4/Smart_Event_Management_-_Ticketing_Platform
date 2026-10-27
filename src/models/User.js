@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
 const SALT_ROUNDS = 10;
-const ROLES = ["user", "admin"];
+const ROLES = ["user", "organiser", "admin"];
 
 const userSchema = new mongoose.Schema(
   {

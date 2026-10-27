@@ -637,3 +637,22 @@ td.actions {
     padding: 18px;
   }
 }
+
+.label{
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.radio-option input{
+  width: auto;
+}
